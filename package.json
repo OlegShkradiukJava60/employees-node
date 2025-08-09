@@ -7,20 +7,21 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon --watch src --ext ts --exec node --loader ts-node/esm src/controller/index.ts"
   },
   "dependencies": {
-   
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "lodash": "^4.17.21",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "zod": "^4.0.16"
   },
   "devDependencies": {
-     "@types/morgan": "^1.9.10",
     "@types/express": "^5.0.3",
     "@types/lodash": "^4.17.20",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.12",
+    "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3"

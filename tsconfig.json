@@ -1,9 +1,15 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "moduleResolution": "node"
+    "strict": false,
+    "skipLibCheck": true
+  },
+  "ts-node": {
+    "esm": true
   }
 }
