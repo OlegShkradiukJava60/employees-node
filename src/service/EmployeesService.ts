@@ -5,4 +5,5 @@ export default interface EmployeesService {
   getAll(department?: string): Employee[];
   updateEmployee(id: string, empl: Partial<Employee>): Employee;
   deleteEmployee(id: string): Employee;
+  save(): void;
 }
