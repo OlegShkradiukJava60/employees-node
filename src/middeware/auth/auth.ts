@@ -1,35 +1,33 @@
-import { NextFunction, Request, Response } from "express";
+import {Request, Response, NextFunction, RequestHandler} from "express"
 import JwtUtil from "../../security/JwtUtil.ts";
-
-export type Role = "ADMIN" | "USER";
-
-
-export function authenticate(allowed: Role[]) {
-    return (req: Request, _res: Response, next: NextFunction) => {
+import { AuthenticationError, AuthorizationError } from "../../model/error-types/aaa-errors.ts";
+const BEARER = "Bearer ";
+export function authenticate(req: Request & {username: string, role: string} , res: Response, next: NextFunction): void {
+    const authHeader = req.header("Authorization");
+    if (authHeader && authHeader.startsWith(BEARER)) {
+        const token = authHeader.substring(BEARER.length);
         try {
-            const header = req.header("Authorization") || "";
-            const [type, token] = header.split(" ");
+            const payload = JwtUtil.verifyToken(token);
+            req.username = payload.sub;
+            req.role = payload.role;
+        } catch (error) {
+            throw new AuthenticationError()
+        }
+        
 
-            if (type !== "Bearer" || !token) {
-                return next({ status: 401, message: "no token provided" });
+    }
+    next();
+}
+
+export function auth(roles: string[]): RequestHandler {
+    return (req: Request & {username: string, role: string}, _, next) => {
+            if(!req.role) {
+                throw new AuthenticationError();
             }
-
-            const payload = JwtUtil.verifyToken(token) as { role?: Role; sub?: string };
-
-            if (!payload?.role) {
-                return next({ status: 401, message: "invalid token" });
+            if(!roles.includes(req.role)) {
+                throw new AuthorizationError();
             }
-
-            if (!allowed.includes(payload.role)) {
-                return next({ status: 403, message: `forbidden for role ${payload.role}` });
-            }
-            (req as any).user = { username: payload.sub, role: payload.role, token };
-            console.log(`[AAA] ${payload.role} -> ${req.method} ${req.originalUrl}`);
-
             next();
-        }
-        catch (_e) {
-            return next({ status: 401, message: "invalid token" });
-        }
-    };
+
+    }
 }

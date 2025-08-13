@@ -1,4 +1,4 @@
-import { Employee } from "../model/Employee.ts";
+import { Employee } from "../model/dto-types/Employee.ts";
 
 export default interface EmployeesService {
   addEmployee(empl: Employee): Employee;
