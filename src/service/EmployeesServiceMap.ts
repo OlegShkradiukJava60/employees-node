@@ -1,22 +1,12 @@
-import { Employee } from "../model/Employee";
+import { Employee } from "../model/dto-types/Employee.ts";
 import EmployeesService from "./EmployeesService.ts";
 import fs from "node:fs";
 import path from "node:path";
-
+import EmployeesServiceMock from "./EmployeesServiceMock.test.ts";
 import { getId } from "../utils/service-helpers.ts";
+import { EmployeeAlreadyExistsError, EmployeeNotFoundError } from "../model/error-types/employee-error.ts";
 const DEFAULT_FILE_NAME = "employees.data";
-export class EmployeeAlreadyExistsError extends Error {
-  constructor(id: string) {
-    super(`employee with id ${id} already exists`);
-    Object.setPrototypeOf(this, EmployeeAlreadyExistsError.prototype);
-  }
-}
-export class EmployeeNotFoundError extends Error {
-  constructor(id: string) {
-    super(`employee with id ${id} not found`);
-    Object.setPrototypeOf(this, EmployeeNotFoundError.prototype);
-  }
-}
+
 class EmployeesServiceMap implements EmployeesService {
   private _employees: Map<string, Employee> = new Map();
   private _filePath: string;
@@ -25,7 +15,7 @@ class EmployeesServiceMap implements EmployeesService {
       process.cwd(),
       process.env.FILE_NAME || DEFAULT_FILE_NAME
     );
-    
+
     if (fs.existsSync(this._filePath)) {
       const jsonEmployees = fs.readFileSync(this._filePath, {
         encoding: "utf8",
@@ -35,7 +25,7 @@ class EmployeesServiceMap implements EmployeesService {
       );
     }
   }
-  
+
   addEmployee(empl: Employee): Employee {
     const id = empl.id ?? (empl.id = getId());
     if (this._employees.has(id)) {
@@ -45,7 +35,6 @@ class EmployeesServiceMap implements EmployeesService {
     this._flUpdate = true;
     return empl;
   }
-  
 
   getAll(department?: string): Employee[] {
     let res: Employee[] = Array.from(this._employees.values());
@@ -83,6 +72,5 @@ class EmployeesServiceMap implements EmployeesService {
     }
   }
 }
-const service: EmployeesService = new EmployeesServiceMap();
+const service: EmployeesService = process.env.NODE_TEST_CONTEXT ? new EmployeesServiceMock() : new EmployeesServiceMap();
 export default service;
-

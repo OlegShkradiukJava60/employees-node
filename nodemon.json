@@ -1,6 +1,6 @@
 {
-  "watch": ["src", ".env"],
-  "ext": "ts,json,env",
-  "exec": "node -r dotenv/config --no-warnings --loader ts-node/esm src/controller/index.ts",
-  "signal": "SIGTERM"
+    "watch": ["src", "config",".env"],
+    "ext":"ts,json,env",
+    "exec": "node --no-warnings --loader ts-node/esm src/controller/index.ts",
+    "signal": "SIGTERM"
 }

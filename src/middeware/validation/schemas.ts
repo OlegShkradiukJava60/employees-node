@@ -11,7 +11,7 @@ console.log(Array.from(departments.values()))
 export const EmployeeSchema = z.object({
   fullName: z.string().min(5),
   id: z.string().optional(),
-  avatar: z.union([z.url(), z.literal("")]),
+  avatar: z.union([z.url(), z.literal("")]).optional(),
   department: z.string().refine(
     val =>departments.has(val),
     { message: `must be one out of ${Array.from(departments.values())}` }
