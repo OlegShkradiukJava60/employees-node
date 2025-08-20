@@ -10,3 +10,9 @@ export class EmployeeNotFoundError extends Error {
     Object.setPrototypeOf(this, EmployeeNotFoundError.prototype);
   }
 }
+export class LoginError extends Error {
+  constructor() {
+    super("Wrong Credentials");
+    Object.setPrototypeOf(this, LoginError.prototype);
+  }
+}

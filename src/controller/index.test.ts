@@ -1,100 +1,125 @@
-import jwt from "jsonwebtoken";
-process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-secret";
-
 import supertest from "supertest";
 import test from "node:test";
-import assert from "assert/strict";
+import assert from "assert/strict"
 import app from "./routes/mainRoutes.ts";
-
-const ADMIN_USERNAME = "admin@tel-ran.com";
-const ADMIN_TOKEN = jwt.sign({ role: "ADMIN" }, process.env.JWT_SECRET as string, { subject: ADMIN_USERNAME });
-
-let createdId: string | undefined;
-
-test("GET /employees 401 without token", async () => {
-  const res = await supertest(app).get("/employees");
-  assert.equal(res.statusCode, 401);
-});
-
-test("GET /employees 200 with token", async () => {
-  const res = await supertest(app)
-    .get("/employees")
-    .set("Authorization", "Bearer " + ADMIN_TOKEN);
-  assert.equal(res.statusCode, 200);
-  assert.ok(Array.isArray(res.body));
-});
-
-test("POST /employees create", async () => {
-  const body = {
-    fullName: "Oleg Shkrada",
-    department: "QA",
-    salary: 5000,
-    birthDate: "1990-01-20"
-  };
-
-  const res = await supertest(app)
-    .post("/employees")
-    .set("Authorization", "Bearer " + ADMIN_TOKEN)
-    .send(body);
-
-  if (res.statusCode >= 200 && res.statusCode < 300 && res.body && res.body.id) {
-    createdId = res.body.id;
-  }
-});
-
-test("GET /employees/:id 200", async (t) => {
-  if (!createdId) { t.skip("no createdId"); return; }
-  const res = await supertest(app)
-    .get(`/employees/${createdId}`)
-    .set("Authorization", "Bearer " + ADMIN_TOKEN);
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body.id, createdId);
-  assert.equal(res.body.fullName, "Oleg Shkrada");
-});
-
-test("PATCH /employees/:id 200", async (t) => {
-  if (!createdId) { t.skip("no createdId"); return; }
-  const patch = { salary: 7777, department: "Accounting" };
-  const res = await supertest(app)
-    .patch(`/employees/${createdId}`)
-    .set("Authorization", "Bearer " + ADMIN_TOKEN)
-    .send(patch);
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body.id, createdId);
-  assert.equal(res.body.salary, 7777);
-  assert.equal(res.body.department, "Accounting");
-});
-
-test("DELETE /employees/:id 200/204", async (t) => {
-  if (!createdId) { t.skip("no createdId"); return; }
-  const res = await supertest(app)
-    .delete(`/employees/${createdId}`)
-    .set("Authorization", "Bearer " + ADMIN_TOKEN);
-  assert.ok(res.statusCode === 200 || res.statusCode === 204);
-});
-
-test("GET /employees/:id after delete 404/410", async (t) => {
-  if (!createdId) { t.skip("no createdId"); return; }
-  const res = await supertest(app)
-    .get(`/employees/${createdId}`)
-    .set("Authorization", "Bearer " + ADMIN_TOKEN);
-  assert.ok(res.statusCode === 404 || res.statusCode === 410);
-});
-
-test("POST /login success 200/400/401/500", async () => {
-  const res = await supertest(app)
-    .post("/login")
-    .send({ username: "admin@tel-ran.com", password: "admin" });
-  assert.ok([200, 400, 401, 500].includes(res.statusCode));
-  if (res.statusCode === 200) {
-    assert.ok(typeof res.body === "object");
-    assert.ok(!!res.body.token || !!res.body.accessToken);
-  }
-});
-
-test("POST /login wrong password 400/401/500", async () => {
-  const res = await supertest(app)
-    .post("/login")
-    .send({ username: "admin@tel-ran.com", password: "wrong-password" });
-  assert.ok([400, 401, 500].includes(res.statusCode));
-});
+import JwtUtil from "../security/JwtUtil.ts";
+import { Employee } from "../model/dto-types/Employee.ts";
+import LoginData from "../model/dto-types/LoginData.ts";
+console.log("JWT_SECRET", process.env.JWT_SECRET);
+console.log("MORGAN_FORMAT", process.env.MORGAN_FORMAT)
+const emplRight: Employee = {
+  avatar: "",
+  birthDate: "2000-01-01",
+  department: "QA",
+  fullName: "Vasya Ivanov",
+  salary: 10000,
+}
+const emplWrong: Employee = {
+  avatar: "kuku",
+  birthDate: "1900-01-01",
+  department: "Q",
+  fullName: "",
+  salary: 1000,
+}
+const fields: string[] = Object.keys(emplRight);
+test("get employees with 401", async () => {
+    const response = await supertest(app).get("/employees");
+    
+  assert.equal(response.statusCode, 401)
+})
+const adminToken = JwtUtil.getJWT({
+      username: "admin@tel-ran.com",
+      role: "ADMIN",
+      password: "password",
+    })
+    const userToken = JwtUtil.getJWT({
+      username: "user@tel-ran.com",
+      role: "USER",
+      password: "password",
+    })
+    const adminAuthHeader = "Bearer " + adminToken;
+    const userAuthHeader = "Bearer " + userToken;
+    const loginCorrect: LoginData = {
+      email: "user@tel-ran.com",
+      password: "user1234"
+    }
+    const loginIncorrect: LoginData = {
+      email: "user@tel-ran.com",
+      password: "user12345"
+    }
+test("get employees with 200 for USER", async () => {
+    const response = await supertest(app).get("/employees").set("Authorization", userAuthHeader);
+    
+  assert.equal(response.statusCode, 200);
+  assert.ok(Array.isArray(response.body))
+})
+test("get employees with 200 for ADMIN", async () => {
+    const response = await supertest(app).get("/employees").set("Authorization",adminAuthHeader);
+    
+  assert.equal(response.statusCode, 200);
+  assert.ok(Array.isArray(response.body))
+})
+test("add employee with 401 code", async () => {
+  const response = await supertest(app).post("/employees").send(emplRight)
+  assert.equal(response.statusCode, 401); //no token
+})
+test("add employee with 403 code no ADMIN", async () => {
+  const response =  await supertest(app).post("/employees").set("Authorization", userAuthHeader ).send(emplRight)
+  assert.equal(response.statusCode, 403); 
+})
+test("add employee with 400 code auth - ok, validation - invalid", async () => {
+  const response =  await supertest(app).post("/employees").set("Authorization", adminAuthHeader ).send(emplWrong)
+  assert.equal(response.statusCode, 400); 
+  assert.ok(fields.every(f => response.text.includes(f)))
+})
+test("add employee with 200 code auth - ok, validation - ok", async () => {
+  const response =  await supertest(app).post("/employees").set("Authorization", adminAuthHeader ).send(emplRight)
+  assert.equal(response.statusCode, 200); 
+  assert.ok(response.body),
+  assert.ok(!response.error)
+})
+test("login with 400 code, wrong credentials", async () => {
+  const response = await supertest(app).post("/login").send(loginIncorrect);
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.text,"Wrong Credentials");
+  assert.equal(Object.keys(response.body).length, 0);
+})
+test("login with 200 code, token is returned", async () => {
+  const response = await supertest(app).post("/login").send(loginCorrect);
+  assert.equal(response.statusCode, 200);
+  assert.ok(!response.error);
+  const{accessToken, user} = response.body;
+  assert.ok((accessToken as string).length > 10);
+  assert.equal((user as any).email, loginCorrect.email);
+  assert.equal((user as any).id, "USER");
+})
+test("update employee with 401 code, no token ", async () => {
+  const response = await supertest(app).patch("/employees/123").send({salary:20000})
+  assert.equal(response.statusCode, 401)
+})
+test("update employee with 403 code, no permision ", async () => {
+  const response = await supertest(app).patch("/employees/123").set("Authorization",userAuthHeader).send({salary:20000})
+  assert.equal(response.statusCode, 403)
+})
+test("update employee with 400 code, validation - invalid ", async () => {
+  const response = await supertest(app).patch("/employees/123").set("Authorization",adminAuthHeader).send({salary:2000})
+  assert.equal(response.statusCode, 400);
+  assert.ok(response.text.includes("salary"))
+})
+test("update employee with 200 code", async () => {
+  const response = await supertest(app).patch("/employees/123").set("Authorization",adminAuthHeader).send({salary:20000})
+  assert.equal(response.statusCode, 200);
+  
+})
+test("delete employee with 401 code, no token", async () => {
+  const response = await supertest(app).delete("/employees/123");
+  assert.equal(response.statusCode, 401)
+})
+test("delete employee with 403 code, no permission", async () => {
+  const response = await supertest(app).delete("/employees/123").set("Authorization", userAuthHeader);
+  assert.equal(response.statusCode, 403)
+})
+test("delete employee with 200 code", async () => {
+  const response = await supertest(app).delete("/employees/123").set("Authorization", adminAuthHeader);
+  assert.equal(response.statusCode, 200)
+})

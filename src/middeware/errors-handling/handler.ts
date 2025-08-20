@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import {
   EmployeeAlreadyExistsError,
   EmployeeNotFoundError,
+  LoginError,
 } from "../../model/error-types/employee-error.ts";
 import { getZodMessage } from "./zod-errors-message.ts";
 import { AuthenticationError, AuthorizationError } from "../../model/error-types/aaa-errors.ts";
@@ -11,7 +12,8 @@ const errorStatus = new Map<Function, number>(
     [EmployeeAlreadyExistsError, 409],
     [EmployeeNotFoundError, 404],
     [AuthenticationError, 401],
-    [AuthorizationError, 403]
+    [AuthorizationError, 403],
+    [LoginError, 400]
   ]
 )
 export const errorsHandler = (

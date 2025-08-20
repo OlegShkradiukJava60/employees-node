@@ -8,9 +8,11 @@
   "main": "index.ts",
   "scripts": {
     "dev": "nodemon",
-    "test-controller": "node --test --no-warnings --loader ts-node/esm src/controller/index.test.ts"
+    "test-controller": "node  --no-warnings --loader ts-node/esm --env-file=envTest.test.env src/controller/index.test.ts mock",
+    "test-service": "node  --no-warnings --loader ts-node/esm --env-file=envTest.test.env src/service/EmployeesService.test.ts"
   },
   "dependencies": {
+   
     "bcrypt-ts": "^7.1.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -21,10 +23,7 @@
     "zod": "^4.0.15"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.9.0",
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.20",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.12",
@@ -32,6 +31,9 @@
     "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+     "@faker-js/faker": "^9.9.0",
+    "@types/cors": "^2.8.19",
+    "@types/jsonwebtoken": "^9.0.10"
   }
 }
