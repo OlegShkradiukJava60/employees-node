@@ -1,20 +1,25 @@
-import { Employee } from "../model/dto-types/Employee";
-import EmployeesService from "./EmployeesService";
+import { Employee } from "../model/dto-types/Employee.ts";
+import EmployeesService from "./EmployeesService.ts";
+import { registerEmployeesService } from "./registry.ts";
 export default class EmployeesServiceMock implements EmployeesService {
-    addEmployee(empl: Employee): Employee {
+    async getEmployee(id: string): Promise<Employee> {
         return {} as Employee
     }
-    getAll(department?: string): Employee[] {
+    async addEmployee(empl: Employee): Promise<Employee> {
+        return {} as Employee
+    }
+    async getAll(department?: string): Promise<Employee[]> {
         return [];
     }
-    updateEmployee(id: string, empl: Partial<Employee>): Employee {
+    async updateEmployee(id: string, empl: Partial<Employee>): Promise<Employee> {
          return {} as Employee
     }
-    deleteEmployee(id: string): Employee {
+    async deleteEmployee(id: string): Promise<Employee> {
         return {} as Employee
     }
-    save(): void {
+    async save(): Promise<void> {
        
     }
     
 }
+registerEmployeesService("mock", async (_) => new EmployeesServiceMock())

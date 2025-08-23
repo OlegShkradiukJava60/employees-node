@@ -2,9 +2,9 @@ import { Employee } from "../model/dto-types/Employee.ts";
 import EmployeesService from "./EmployeesService.ts";
 import fs from "node:fs";
 import path from "node:path";
-import EmployeesServiceMock from "./EmployeesServiceMock.test.ts";
 import { getId } from "../utils/service-helpers.ts";
 import { EmployeeAlreadyExistsError, EmployeeNotFoundError } from "../model/error-types/employee-error.ts";
+import { registerEmployeesService } from "./registry.ts";
 const DEFAULT_FILE_NAME = "employees.data";
 
 class EmployeesServiceMap implements EmployeesService {
@@ -26,7 +26,7 @@ class EmployeesServiceMap implements EmployeesService {
     }
   }
 
-  addEmployee(empl: Employee): Employee {
+  async addEmployee(empl: Employee): Promise<Employee> {
     const id = empl.id ?? (empl.id = getId());
     if (this._employees.has(id)) {
       throw new EmployeeAlreadyExistsError(id);
@@ -36,35 +36,35 @@ class EmployeesServiceMap implements EmployeesService {
     return empl;
   }
 
-  getAll(department?: string): Employee[] {
+  async getAll(department?: string): Promise<Employee[]> {
     let res: Employee[] = Array.from(this._employees.values());
     if (department) {
       res = res.filter((empl) => empl.department === department);
     }
     return res;
   }
-  updateEmployee(id: string, empl: Partial<Employee>): Employee {
-    const employee = this.getEmployee(id);
+  async updateEmployee(id: string, empl: Partial<Employee>): Promise<Employee> {
+    const employee = await this.getEmployee(id);
     Object.assign(employee, empl);
     this._flUpdate = true;
     return employee;
   }
-  deleteEmployee(id: string): Employee {
-    const employee = this.getEmployee(id);
+  async deleteEmployee(id: string): Promise<Employee> {
+    const employee = await this.getEmployee(id);
     this._employees.delete(id);
     this._flUpdate = true;
     return employee;
   }
 
-  private getEmployee(id: string): Employee {
+  async  getEmployee(id: string): Promise<Employee> {
     const employee = this._employees.get(id);
     if (!employee) {
       throw new EmployeeNotFoundError(id);
     }
     return employee;
   }
-  save(): void {
-    const jsonEmployees = JSON.stringify(this.getAll());
+  async save(): Promise<void> {
+    const jsonEmployees = JSON.stringify(await this.getAll());
     if (this._flUpdate) {
       //saving only if updated
       fs.writeFileSync(this._filePath, jsonEmployees, { encoding: "utf8" });
@@ -72,5 +72,4 @@ class EmployeesServiceMap implements EmployeesService {
     }
   }
 }
-const service: EmployeesService = process.env.NODE_TEST_CONTEXT ? new EmployeesServiceMock() : new EmployeesServiceMap();
-export default service;
+registerEmployeesService("map", async (_) => new EmployeesServiceMap())

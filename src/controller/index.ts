@@ -2,7 +2,7 @@
 import "dotenv/config";
 import _ from "lodash";
 
-import service from "../service/EmployeesServiceMap.ts";
+import service from "../service/bootstrap.ts";
 
 import { getRandomEmployees } from "../utils/service-helpers.ts";
 
@@ -27,7 +27,7 @@ function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 if (process.env.NODE_ENV !== "production") {
-  if (service.getAll().length === 0) {
+  if ((await service.getAll()).length === 0) {
     const employees = getRandomEmployees();
     employees.forEach((empl) => service.addEmployee(empl));
   }

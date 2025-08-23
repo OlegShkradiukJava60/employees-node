@@ -1,7 +1,6 @@
-# HW# 11 controller unit-test
-## Complete all controller tests
-### Update index.test.ts
-Write tests for all routes including /login (see supertest documentation for POST, PUTCH and DELETE requests)
+# HW# 13 completing class AbstractEmployeesServiceSql
+## Complete all class methods (so far they throw "Not Implemented" errors)
+
 ### Running tests
-npm run test-controller <br>
+npm run test-service sqlite <br>
 making sure all tests pass

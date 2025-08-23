@@ -8,7 +8,8 @@
   "main": "index.ts",
   "scripts": {
     "dev": "nodemon",
-    "test-controller": "node --test --no-warnings --loader ts-node/esm src/controller/index.test.ts"
+    "test-controller": "node  --no-warnings --loader ts-node/esm --env-file=envTest.test.env src/controller/index.test.ts mock",
+    "test-service": "node  --no-warnings --loader ts-node/esm --env-file=envTest.test.env src/service/EmployeesService.test.ts"
   },
   "dependencies": {
     "bcrypt-ts": "^7.1.0",
@@ -16,8 +17,10 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "knex": "^3.1.0",
     "lodash": "^4.17.21",
     "morgan": "^1.10.1",
+    "sqlite3": "^5.1.7",
     "zod": "^4.0.15"
   },
   "devDependencies": {

@@ -1,6 +1,7 @@
 import Account from "../model/dto-types/Account.ts";
 import LoginData from "../model/dto-types/LoginData.ts";
 import LoginResponse from "../model/dto-types/LoginResponse.ts";
+import { LoginError } from "../model/error-types/employee-error.ts";
 import JwtUtil from "../security/JwtUtil.ts";
 import AccountingService from "./AccountingService.ts";
 import { compareSync } from "bcrypt-ts";
@@ -22,7 +23,7 @@ class AccountingServiceMap implements AccountingService {
     const account: Account = this._accounts.get(loginData.email);
 
     if (!account || !compareSync(loginData.password, account.password)) {
-      throw new Error("Wrong credentials");
+      throw new LoginError();
     }
     return {
       accessToken: JwtUtil.getJWT(account),
