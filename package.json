@@ -8,8 +8,8 @@
   "main": "index.ts",
   "scripts": {
     "dev": "nodemon",
-    "test-controller": "node  --no-warnings --loader ts-node/esm --env-file=envTest.test.env src/controller/index.test.ts mock",
-    "test-service": "node  --no-warnings --loader ts-node/esm --env-file=envTest.test.env src/service/EmployeesService.test.ts"
+    "test-controller": "node --no-warnings --loader ts-node/esm --experimental-specifier-resolution=node --env-file=envTest.test.env src/controller/index.test.ts mock",
+    "test-service": "node --no-warnings --loader ts-node/esm --experimental-specifier-resolution=node --env-file=envTest.test.env src/service/EmployeesService.test.ts"
   },
   "dependencies": {
     "bcrypt-ts": "^7.1.0",
@@ -22,6 +22,7 @@
     "mongodb": "^6.18.0",
     "mongodb-memory-server": "^10.2.0",
     "morgan": "^1.10.1",
+    "pg": "^8.16.3",
     "sqlite3": "^5.1.7",
     "zod": "^4.0.15"
   },
@@ -31,6 +32,7 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.20",
+    "@types/mongodb-memory-server": "^1.8.0",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.12",
     "@types/supertest": "^6.0.3",
