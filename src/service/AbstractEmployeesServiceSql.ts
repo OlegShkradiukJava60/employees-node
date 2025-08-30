@@ -1,46 +1,72 @@
 import { Employee } from "../model/dto-types/Employee.ts";
+import {
+  EmployeeAlreadyExistsError,
+  EmployeeNotFoundError,
+} from "../model/error-types/employee-error.ts";
+import { getId } from "../utils/service-helpers.ts";
 import EmployeesService from "./EmployeesService.ts";
-import knex, {Knex} from 'knex';
-const TABLE_NAME = "employees"
-export default abstract class  AbstractEmployeesServiceSql implements EmployeesService {
-    private db: Knex;
-    constructor(config: Knex.Config) {
-        this.db = knex(config);
+import knex, { Knex } from "knex";
+const TABLE_NAME = "employees";
+export default abstract class AbstractEmployeesServiceSql
+  implements EmployeesService
+{
+  private db: Knex;
+  constructor(config: Knex.Config) {
+    this.db = knex(config);
+  }
+  async createTable(): Promise<void> {
+    const exists = await this.db.schema.hasTable(TABLE_NAME);
+    if (!exists) {
+      await this.db.schema.createTable(TABLE_NAME, (table) => {
+        table.string("id").primary();
+        table.string("fullName");
+        table.string("avatar").defaultTo("");
+        table.string("department");
+        table.string("birthDate");
+        table.integer("salary");
+        table.index(["department"]) //creating index for better performence of queries by department
+      });
     }
-    async createTable() {
-        const exists = await this.db.schema.hasTable(TABLE_NAME);
-        if(!exists) {
-           await this.db.schema.createTable(TABLE_NAME, table => {
-                table.string("id").primary();
-                table.string("fullName");
-                table.string("avatar").defaultTo("");
-                table.string("birthDate");
-                table.integer("salary");
-                table.string("department");
-            })
-        }
+  }
+  async addEmployee(empl: Employee): Promise<Employee> {
+    if (!empl.id) {
+      empl.id = getId();
     }
-    addEmployee(empl: Employee): Promise<Employee> {
-        throw new Error("Method not implemented.");
+    try {
+      await this.db<Employee>(TABLE_NAME).insert(empl);
+    } catch (error) {
+      throw new EmployeeAlreadyExistsError(empl.id);
     }
-    async getAll(department?: string): Promise<Employee[]> {
-       const query = this.db<Employee>(TABLE_NAME);
-       if(department) {
-        query.where({department})
-       }
-       return await query;
+    return empl;
+  }
+
+  async getAll(department?: string): Promise<Employee[]> {
+    const query = this.db(TABLE_NAME);
+    if (department) {
+      query.where({ department });
     }
-    updateEmployee(id: string, empl: Partial<Employee>): Promise<Employee> {
-        throw new Error("Method not implemented.");
+    return await query;
+  }
+  async updateEmployee(id: string, empl: Partial<Employee>): Promise<Employee> {
+    const res = await this.db(TABLE_NAME).where({ id }).update(empl);
+    if (res == 0) {
+      throw new EmployeeNotFoundError(id);
     }
-    deleteEmployee(id: string): Promise<Employee> {
-        throw new Error("Method not implemented.");
+    return this.getEmployee(id);
+  }
+  async deleteEmployee(id: string): Promise<Employee> {
+    const empl = await this.getEmployee(id);
+    await this.db<Employee>(TABLE_NAME).where({ id }).delete();
+    return empl;
+  }
+  async getEmployee(id: string): Promise<Employee> {
+    const empl = await this.db<Employee>(TABLE_NAME).where({ id }).first();
+    if (!empl) {
+      throw new EmployeeNotFoundError(id);
     }
-    getEmployee(id: string): Promise<Employee> {
-        throw new Error("Method not implemented.");
-    }
-    async save(): Promise<void> {
-        await this.db.destroy()
-    }
-    
+    return empl;
+  }
+  async save(): Promise<void> {
+    await this.db.destroy();
+  }
 }
